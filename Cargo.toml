@@ -5,11 +5,11 @@ authors = ["Masaki Hara <ackie.h.gmai@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-libwebp = { path = "..", default-features = false }
+libwebp = "0.1.0"
 image = "0.23"
 
 [features]
 default = []
-"libwebp-0.5" = ["libwebp/0.5"]
-"libwebp-0.6" = ["libwebp/0.6", "libwebp-0.5"]
-"libwebp-1.1" = ["libwebp/1.1", "libwebp-0.6"]
+"libwebp-0_5" = ["libwebp/0_5"]
+"libwebp-0_6" = ["libwebp/0_6", "libwebp-0_5"]
+"libwebp-1_1" = ["libwebp/1_1", "libwebp-0_6"]
