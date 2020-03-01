@@ -4,6 +4,19 @@ version = "0.1.0"
 authors = ["Masaki Hara <ackie.h.gmai@gmail.com>"]
 edition = "2018"
 
+description = "A bridge library for libwebp and image"
+homepage = "https://github.com/qnighy/libwebp-image-rs"
+repository = "https://github.com/qnighy/libwebp-image-rs"
+readme = "README.md"
+keywords = ["webp", "image"]
+categories = ["multimedia", "multimedia::images"]
+license = "MIT OR Apache-2.0"
+
+[badges]
+travis-ci = { repository = "qnighy/libwebp-image-rs", branch = "master" }
+is-it-maintained-issue-resolution = { repository = "qnighy/libwebp-image-rs" }
+is-it-maintained-open-issues = { repository = "qnighy/libwebp-image-rs" }
+
 [dependencies]
 libwebp = "0.1.0"
 image = "0.23"
