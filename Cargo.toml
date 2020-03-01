@@ -1,41 +1,5 @@
-[package]
-name = "libwebp"
-version = "0.1.0"
-authors = ["Masaki Hara <ackie.h.gmai@gmail.com>"]
-edition = "2018"
-
-description = "A binding to libwebp"
-homepage = "https://github.com/qnighy/libwebp-rs"
-repository = "https://github.com/qnighy/libwebp-rs"
-readme = "README.md"
-keywords = ["webp", "image"]
-categories = ["api-bindings", "multimedia", "multimedia::images"]
-license = "BSD-3-Clause"
-
-[badges]
-travis-ci = { repository = "qnighy/libwebp-rs", branch = "master" }
-is-it-maintained-issue-resolution = { repository = "qnighy/libwebp-rs" }
-is-it-maintained-open-issues = { repository = "qnighy/libwebp-rs" }
-
-[dependencies]
-libwebp-sys2 = "0.1.0"
-
-[features]
-default = []
-demux = ["libwebp-sys2/demux"]
-mux = ["libwebp-sys2/mux"]
-"0.5" = ["libwebp-sys2/0.5"]
-"0.6" = ["libwebp-sys2/0.6", "0.5"]
-"1.1" = ["libwebp-sys2/1.1", "0.6"]
-static = ["libwebp-sys2/static"]
-extern-types = ["libwebp-sys2/extern-types"]
-__doc_cfg = ["libwebp-sys2/__doc_cfg", "1.1", "demux", "mux"]
-
 [workspace]
 members = [
   "libwebp-sys",
   "libwebp-image",
 ]
-
-[patch.crates-io]
-libwebp-sys2 = { path = "libwebp-sys" }
