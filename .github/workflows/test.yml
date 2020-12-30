@@ -1,0 +1,35 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        rust: [stable, 1.36.0, beta, nightly]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: ${{ matrix.rust }}
+        override: true
+    - name: Install libwebp
+      run: sudo apt-get update && sudo apt-get install libwebp-dev -y;
+    - name: Test 0.4
+      run: cargo test --all --features ""
+    - name: Test 0.5
+      run: cargo test --all --features "libwebp-0_5"
+    - name: Test 0.6
+      run: cargo test --all --features "libwebp-0_6"
+    - name: Test __doc_cfg
+      run: cargo doc --all --features ""
+      if: matrix.rust == 'nightly'
+    - name: Check format
+      run: |
+        rustup component add rustfmt-preview
+        cargo fmt --all -- --check
+      if: matrix.rust == 'stable'
