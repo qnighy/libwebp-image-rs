@@ -12,6 +12,11 @@ keywords = ["webp", "image"]
 categories = ["multimedia", "multimedia::images"]
 license = "MIT OR Apache-2.0"
 
+exclude = [
+    ".github",
+    "/tests",
+]
+
 [badges]
 travis-ci = { repository = "qnighy/libwebp-image-rs", branch = "master" }
 is-it-maintained-issue-resolution = { repository = "qnighy/libwebp-image-rs" }
@@ -20,6 +25,10 @@ is-it-maintained-open-issues = { repository = "qnighy/libwebp-image-rs" }
 [dependencies]
 libwebp = "0.1.0"
 image = "0.23"
+
+[dev-dependencies]
+rand = "0.8.3"
+approx = "0.4.0"
 
 [features]
 default = []

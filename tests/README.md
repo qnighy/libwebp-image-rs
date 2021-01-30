@@ -1,0 +1,1 @@
+The original image of `jelly.webp` was taken from http://sipi.usc.edu/database/database.php?volume=misc&image=7 . This is "free to use" according to [the copyright information](http://sipi.usc.edu/database/copyright.php).
