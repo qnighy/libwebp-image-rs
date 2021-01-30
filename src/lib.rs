@@ -163,13 +163,13 @@ pub fn webp_load<R: Read>(r: R) -> ImageResult<DynamicImage> {
 
 pub fn webp_load_rgba<R: Read>(mut r: R) -> ImageResult<RgbaImage> {
     let mut buf = Vec::new();
-    r.read_exact(&mut buf)?;
+    r.read_to_end(&mut buf)?;
     webp_load_rgba_from_memory(&buf)
 }
 
 pub fn webp_load_rgb<R: Read>(mut r: R) -> ImageResult<RgbImage> {
     let mut buf = Vec::new();
-    r.read_exact(&mut buf)?;
+    r.read_to_end(&mut buf)?;
     webp_load_rgb_from_memory(&buf)
 }
 
