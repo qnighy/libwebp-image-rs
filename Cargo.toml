@@ -24,7 +24,7 @@ is-it-maintained-open-issues = { repository = "qnighy/libwebp-image-rs" }
 
 [dependencies]
 libwebp = "0.1.0"
-image = "0.23"
+image = "0.23.12"
 
 [dev-dependencies]
 rand = "0.8.3"

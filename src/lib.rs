@@ -197,12 +197,12 @@ pub fn webp_write<W: Write>(img: &DynamicImage, w: &mut W) -> ImageResult<()> {
         &DynamicImage::ImageRgba8(ref img) => webp_write_rgba(img, w),
         &DynamicImage::ImageBgr8(ref img) => webp_write_bgr(img, w),
         &DynamicImage::ImageBgra8(ref img) => webp_write_bgra(img, w),
-        &DynamicImage::ImageLuma8(_) => webp_write_rgb(&img.to_rgb(), w),
-        &DynamicImage::ImageLumaA8(_) => webp_write_rgba(&img.to_rgba(), w),
-        &DynamicImage::ImageRgb16(_) => webp_write_rgb(&img.to_rgb(), w),
-        &DynamicImage::ImageRgba16(_) => webp_write_rgba(&img.to_rgba(), w),
-        &DynamicImage::ImageLuma16(_) => webp_write_rgb(&img.to_rgb(), w),
-        &DynamicImage::ImageLumaA16(_) => webp_write_rgba(&img.to_rgba(), w),
+        &DynamicImage::ImageLuma8(_) => webp_write_rgb(&img.to_rgb8(), w),
+        &DynamicImage::ImageLumaA8(_) => webp_write_rgba(&img.to_rgba8(), w),
+        &DynamicImage::ImageRgb16(_) => webp_write_rgb(&img.to_rgb8(), w),
+        &DynamicImage::ImageRgba16(_) => webp_write_rgba(&img.to_rgba8(), w),
+        &DynamicImage::ImageLuma16(_) => webp_write_rgb(&img.to_rgb8(), w),
+        &DynamicImage::ImageLumaA16(_) => webp_write_rgba(&img.to_rgba8(), w),
     }
 }
 
