@@ -1,3 +1,8 @@
+## 0.2.0
+
+- Changed
+  - Disable default features from image crate https://github.com/qnighy/libwebp-image-rs/pull/3
+
 ## 0.1.1
 
 - Fixed
