@@ -192,61 +192,117 @@ pub fn webp_load_rgb_from_memory(buf: &[u8]) -> ImageResult<RgbImage> {
     Ok(ImageBuffer::from_raw(width, height, buf.to_vec()).unwrap())
 }
 
-pub fn webp_write<W: Write>(img: &DynamicImage, w: &mut W) -> ImageResult<()> {
-    match img {
-        DynamicImage::ImageRgb8(img) => webp_write_rgb(img, w),
-        DynamicImage::ImageRgba8(img) => webp_write_rgba(img, w),
-        DynamicImage::ImageBgr8(img) => webp_write_bgr(img, w),
-        DynamicImage::ImageBgra8(img) => webp_write_bgra(img, w),
-        DynamicImage::ImageLuma8(_) => webp_write_rgb(&img.to_rgb8(), w),
-        DynamicImage::ImageLumaA8(_) => webp_write_rgba(&img.to_rgba8(), w),
-        DynamicImage::ImageRgb16(_) => webp_write_rgb(&img.to_rgb8(), w),
-        DynamicImage::ImageRgba16(_) => webp_write_rgba(&img.to_rgba8(), w),
-        DynamicImage::ImageLuma16(_) => webp_write_rgb(&img.to_rgb8(), w),
-        DynamicImage::ImageLumaA16(_) => webp_write_rgba(&img.to_rgba8(), w),
+pub struct WebpEncoder<W: Write> {
+    w: W,
+    quality_factor: f32,
+}
+
+impl<W: Write> WebpEncoder<W> {
+    pub fn new(w: W) -> WebpEncoder<W> {
+        Self {
+            w,
+            quality_factor: 0.75,
+        }
     }
-}
+    pub fn new_with_quality(w: W, quality_factor: f32) -> WebpEncoder<W> {
+        Self { w, quality_factor }
+    }
+    pub fn encode(self, img: &DynamicImage) -> ImageResult<()> {
+        match img {
+            DynamicImage::ImageRgb8(img) => self.encode_rgb(img),
+            DynamicImage::ImageRgba8(img) => self.encode_rgba(img),
+            DynamicImage::ImageBgr8(img) => self.encode_bgr(img),
+            DynamicImage::ImageBgra8(img) => self.encode_bgra(img),
+            DynamicImage::ImageLuma8(_) => self.encode_rgb(&img.to_rgb8()),
+            DynamicImage::ImageLumaA8(_) => self.encode_rgba(&img.to_rgba8()),
+            DynamicImage::ImageRgb16(_) => self.encode_rgb(&img.to_rgb8()),
+            DynamicImage::ImageRgba16(_) => self.encode_rgba(&img.to_rgba8()),
+            DynamicImage::ImageLuma16(_) => self.encode_rgb(&img.to_rgb8()),
+            DynamicImage::ImageLumaA16(_) => self.encode_rgba(&img.to_rgba8()),
+        }
+    }
 
-pub fn webp_write_rgba<W: Write, C>(img: &ImageBuffer<Rgba<u8>, C>, w: &mut W) -> ImageResult<()>
-where
-    C: Deref<Target = [u8]>,
-{
-    let buf = libwebp::WebPEncodeRGBA(&img, img.width(), img.height(), img.width() * 4, 75.0)
+    pub fn encode_rgb<C>(self, img: &ImageBuffer<Rgb<u8>, C>) -> ImageResult<()>
+    where
+        C: Deref<Target = [u8]>,
+    {
+        let WebpEncoder {
+            mut w,
+            quality_factor,
+        } = self;
+        let buf = libwebp::WebPEncodeRGB(
+            &img,
+            img.width(),
+            img.height(),
+            img.width() * 3,
+            quality_factor,
+        )
         .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
         .map_err(ImageError::Encoding)?;
-    w.write_all(&buf)?;
-    Ok(())
-}
+        w.write_all(&buf)?;
+        Ok(())
+    }
 
-pub fn webp_write_rgb<W: Write, C>(img: &ImageBuffer<Rgb<u8>, C>, w: &mut W) -> ImageResult<()>
-where
-    C: Deref<Target = [u8]>,
-{
-    let buf = libwebp::WebPEncodeRGB(&img, img.width(), img.height(), img.width() * 3, 75.0)
+    pub fn encode_rgba<C>(self, img: &ImageBuffer<Rgba<u8>, C>) -> ImageResult<()>
+    where
+        C: Deref<Target = [u8]>,
+    {
+        let WebpEncoder {
+            mut w,
+            quality_factor,
+        } = self;
+        let buf = libwebp::WebPEncodeRGBA(
+            &img,
+            img.width(),
+            img.height(),
+            img.width() * 4,
+            quality_factor,
+        )
         .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
         .map_err(ImageError::Encoding)?;
-    w.write_all(&buf)?;
-    Ok(())
-}
+        w.write_all(&buf)?;
+        Ok(())
+    }
 
-pub fn webp_write_bgra<W: Write, C>(img: &ImageBuffer<Bgra<u8>, C>, w: &mut W) -> ImageResult<()>
-where
-    C: Deref<Target = [u8]>,
-{
-    let buf = libwebp::WebPEncodeBGRA(&img, img.width(), img.height(), img.width() * 4, 75.0)
+    pub fn encode_bgr<C>(self, img: &ImageBuffer<Bgr<u8>, C>) -> ImageResult<()>
+    where
+        C: Deref<Target = [u8]>,
+    {
+        let WebpEncoder {
+            mut w,
+            quality_factor,
+        } = self;
+        let buf = libwebp::WebPEncodeBGR(
+            &img,
+            img.width(),
+            img.height(),
+            img.width() * 3,
+            quality_factor,
+        )
         .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
         .map_err(ImageError::Encoding)?;
-    w.write_all(&buf)?;
-    Ok(())
-}
+        w.write_all(&buf)?;
+        Ok(())
+    }
 
-pub fn webp_write_bgr<W: Write, C>(img: &ImageBuffer<Bgr<u8>, C>, w: &mut W) -> ImageResult<()>
-where
-    C: Deref<Target = [u8]>,
-{
-    let buf = libwebp::WebPEncodeBGR(&img, img.width(), img.height(), img.width() * 3, 75.0)
+    pub fn encode_bgra<C>(self, img: &ImageBuffer<Bgra<u8>, C>) -> ImageResult<()>
+    where
+        C: Deref<Target = [u8]>,
+    {
+        let WebpEncoder {
+            mut w,
+            quality_factor,
+        } = self;
+        let buf = libwebp::WebPEncodeBGRA(
+            &img,
+            img.width(),
+            img.height(),
+            img.width() * 4,
+            quality_factor,
+        )
         .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
         .map_err(ImageError::Encoding)?;
-    w.write_all(&buf)?;
-    Ok(())
+        w.write_all(&buf)?;
+        Ok(())
+    }
 }
