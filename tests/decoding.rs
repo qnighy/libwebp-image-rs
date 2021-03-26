@@ -66,7 +66,7 @@ struct TestReader<R>(R);
 
 impl<R: Read> Read for TestReader<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        if buf.len() == 0 {
+        if buf.is_empty() {
             return Ok(0);
         }
         let limit = thread_rng().gen_range(1..=buf.len());

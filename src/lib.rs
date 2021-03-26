@@ -36,6 +36,7 @@ pub struct WebpDecoder<R: Read> {
     reader: Reader<R>,
 }
 
+#[allow(clippy::upper_case_acronyms)]
 #[derive(Debug)]
 enum WebpColor {
     RGB,
@@ -193,16 +194,16 @@ pub fn webp_load_rgb_from_memory(buf: &[u8]) -> ImageResult<RgbImage> {
 
 pub fn webp_write<W: Write>(img: &DynamicImage, w: &mut W) -> ImageResult<()> {
     match img {
-        &DynamicImage::ImageRgb8(ref img) => webp_write_rgb(img, w),
-        &DynamicImage::ImageRgba8(ref img) => webp_write_rgba(img, w),
-        &DynamicImage::ImageBgr8(ref img) => webp_write_bgr(img, w),
-        &DynamicImage::ImageBgra8(ref img) => webp_write_bgra(img, w),
-        &DynamicImage::ImageLuma8(_) => webp_write_rgb(&img.to_rgb8(), w),
-        &DynamicImage::ImageLumaA8(_) => webp_write_rgba(&img.to_rgba8(), w),
-        &DynamicImage::ImageRgb16(_) => webp_write_rgb(&img.to_rgb8(), w),
-        &DynamicImage::ImageRgba16(_) => webp_write_rgba(&img.to_rgba8(), w),
-        &DynamicImage::ImageLuma16(_) => webp_write_rgb(&img.to_rgb8(), w),
-        &DynamicImage::ImageLumaA16(_) => webp_write_rgba(&img.to_rgba8(), w),
+        DynamicImage::ImageRgb8(img) => webp_write_rgb(img, w),
+        DynamicImage::ImageRgba8(img) => webp_write_rgba(img, w),
+        DynamicImage::ImageBgr8(img) => webp_write_bgr(img, w),
+        DynamicImage::ImageBgra8(img) => webp_write_bgra(img, w),
+        DynamicImage::ImageLuma8(_) => webp_write_rgb(&img.to_rgb8(), w),
+        DynamicImage::ImageLumaA8(_) => webp_write_rgba(&img.to_rgba8(), w),
+        DynamicImage::ImageRgb16(_) => webp_write_rgb(&img.to_rgb8(), w),
+        DynamicImage::ImageRgba16(_) => webp_write_rgba(&img.to_rgba8(), w),
+        DynamicImage::ImageLuma16(_) => webp_write_rgb(&img.to_rgb8(), w),
+        DynamicImage::ImageLumaA16(_) => webp_write_rgba(&img.to_rgba8(), w),
     }
 }
 
