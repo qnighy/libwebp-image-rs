@@ -1,3 +1,8 @@
+## Unreleased
+
+- Misc
+  - Test build on Rust 1.34.0 & update docs https://github.com/qnighy/libwebp-image-rs/pull/8
+
 ## 0.2.0
 
 - Changed
