@@ -4,7 +4,7 @@ This is a bridge library for `libwebp` and `image`.
 
 ## Minimum Supported Rust Version (MSRV)
 
-Rust 1.34.0
+Rust 1.34.0 (You need >= 1.36.0 when developing the crate itself)
 
 ## Features
 
