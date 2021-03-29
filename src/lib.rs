@@ -194,18 +194,30 @@ pub fn webp_load_rgb_from_memory(buf: &[u8]) -> ImageResult<RgbImage> {
 
 pub struct WebpEncoder<W: Write> {
     w: W,
-    quality_factor: f32,
+    compression: Compression,
+}
+pub enum Compression {
+    Lossless,
+    Lossy { quality_factor: f32 },
 }
 
 impl<W: Write> WebpEncoder<W> {
     pub fn new(w: W) -> WebpEncoder<W> {
         Self {
             w,
-            quality_factor: 0.75,
+            compression: Compression::Lossy {
+                quality_factor: 0.75,
+            },
         }
     }
     pub fn new_with_quality(w: W, quality_factor: f32) -> WebpEncoder<W> {
-        Self { w, quality_factor }
+        Self {
+            w,
+            compression: Compression::Lossy { quality_factor },
+        }
+    }
+    pub fn new_with_compression(w: W, compression: Compression) -> WebpEncoder<W> {
+        Self { w, compression }
     }
     pub fn encode(self, img: &DynamicImage) -> ImageResult<()> {
         match img {
@@ -226,17 +238,13 @@ impl<W: Write> WebpEncoder<W> {
     where
         C: Deref<Target = [u8]>,
     {
-        let WebpEncoder {
-            mut w,
-            quality_factor,
-        } = self;
-        let buf = libwebp::WebPEncodeRGB(
-            &img,
-            img.width(),
-            img.height(),
-            img.width() * 3,
-            quality_factor,
-        )
+        let WebpEncoder { mut w, compression } = self;
+        let (width, height, stride) = (img.width(), img.height(), img.width() * 3);
+        let buf = if let Compression::Lossy { quality_factor } = compression {
+            libwebp::WebPEncodeRGB(&img, width, height, stride, quality_factor)
+        } else {
+            libwebp::WebPEncodeLosslessRGB(&img, width, height, stride)
+        }
         .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
         .map_err(ImageError::Encoding)?;
         w.write_all(&buf)?;
@@ -247,17 +255,13 @@ impl<W: Write> WebpEncoder<W> {
     where
         C: Deref<Target = [u8]>,
     {
-        let WebpEncoder {
-            mut w,
-            quality_factor,
-        } = self;
-        let buf = libwebp::WebPEncodeRGBA(
-            &img,
-            img.width(),
-            img.height(),
-            img.width() * 4,
-            quality_factor,
-        )
+        let WebpEncoder { mut w, compression } = self;
+        let (width, height, stride) = (img.width(), img.height(), img.width() * 4);
+        let buf = if let Compression::Lossy { quality_factor } = compression {
+            libwebp::WebPEncodeRGBA(&img, width, height, stride, quality_factor)
+        } else {
+            libwebp::WebPEncodeLosslessRGBA(&img, width, height, stride)
+        }
         .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
         .map_err(ImageError::Encoding)?;
         w.write_all(&buf)?;
@@ -268,17 +272,13 @@ impl<W: Write> WebpEncoder<W> {
     where
         C: Deref<Target = [u8]>,
     {
-        let WebpEncoder {
-            mut w,
-            quality_factor,
-        } = self;
-        let buf = libwebp::WebPEncodeBGR(
-            &img,
-            img.width(),
-            img.height(),
-            img.width() * 3,
-            quality_factor,
-        )
+        let WebpEncoder { mut w, compression } = self;
+        let (width, height, stride) = (img.width(), img.height(), img.width() * 3);
+        let buf = if let Compression::Lossy { quality_factor } = compression {
+            libwebp::WebPEncodeBGR(&img, width, height, stride, quality_factor)
+        } else {
+            libwebp::WebPEncodeLosslessBGR(&img, width, height, stride)
+        }
         .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
         .map_err(ImageError::Encoding)?;
         w.write_all(&buf)?;
@@ -289,17 +289,13 @@ impl<W: Write> WebpEncoder<W> {
     where
         C: Deref<Target = [u8]>,
     {
-        let WebpEncoder {
-            mut w,
-            quality_factor,
-        } = self;
-        let buf = libwebp::WebPEncodeBGRA(
-            &img,
-            img.width(),
-            img.height(),
-            img.width() * 4,
-            quality_factor,
-        )
+        let WebpEncoder { mut w, compression } = self;
+        let (width, height, stride) = (img.width(), img.height(), img.width() * 4);
+        let buf = if let Compression::Lossy { quality_factor } = compression {
+            libwebp::WebPEncodeBGRA(&img, width, height, stride, quality_factor)
+        } else {
+            libwebp::WebPEncodeLosslessBGRA(&img, width, height, stride)
+        }
         .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
         .map_err(ImageError::Encoding)?;
         w.write_all(&buf)?;
