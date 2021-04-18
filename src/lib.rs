@@ -1,3 +1,21 @@
+/*!
+This is a bridge library for `libwebp` and `image`.
+
+## Minimum Supported Rust Version (MSRV)
+
+Rust 1.34.0 (You need >= 1.36.0 when developing the crate itself)
+
+## Features
+
+- `libwebp-0_5` ... forwards to `0_5` feature in `libwebp`.
+- `libwebp-0_6` ... forwards to `0_6` feature in `libwebp`.
+- `libwebp-1_1` ... forwards to `1_1` feature in `libwebp`.
+
+## Linking
+
+See [qnighy/libwebp-rs](https://github.com/qnighy/libwebp-rs) for linking details.
+*/
+
 use std::io::{self, Read, Write};
 use std::ops::Deref;
 
@@ -10,6 +28,7 @@ use image::{
 };
 use libwebp::boxed::WebpBox;
 
+/// Helper type to implement Read on WebpDecoder
 #[derive(Debug)]
 pub struct WebpReader<R: Read> {
     reader: Reader<R>,
@@ -33,11 +52,13 @@ impl<R: Read> Read for WebpReader<R> {
     }
 }
 
+/// WebP decoder wrapper
 #[derive(Debug)]
 pub struct WebpDecoder<R: Read> {
     reader: Reader<R>,
 }
 
+/// Supported color types by libwebp.
 #[allow(clippy::upper_case_acronyms)]
 #[derive(Debug)]
 enum WebpColor {
@@ -46,14 +67,17 @@ enum WebpColor {
 }
 
 impl<R: Read> WebpDecoder<R> {
+    /// Creates a new decoder using the RGBA color type.
     pub fn new(reader: R) -> ImageResult<Self> {
         Self::new_inner(reader, WebpColor::RGBA)
     }
 
+    /// Creates a new decoder using the RGBA color type.
     pub fn new_rgba(reader: R) -> ImageResult<Self> {
         Self::new_inner(reader, WebpColor::RGBA)
     }
 
+    /// Creates a new decoder using the RGB color type.
     pub fn new_rgb(reader: R) -> ImageResult<Self> {
         Self::new_inner(reader, WebpColor::RGB)
     }
@@ -160,26 +184,31 @@ impl<R: Read> Reader<R> {
     }
 }
 
+/// Convenience helper to load any webp image from the given `Read`.
 pub fn webp_load<R: Read>(r: R) -> ImageResult<DynamicImage> {
     Ok(DynamicImage::ImageRgba8(webp_load_rgba(r)?))
 }
 
+/// Convenience helper to load an rbga webp image from the given `Read`.
 pub fn webp_load_rgba<R: Read>(mut r: R) -> ImageResult<RgbaImage> {
     let mut buf = Vec::new();
     r.read_to_end(&mut buf)?;
     webp_load_rgba_from_memory(&buf)
 }
 
+/// Convenience helper to load an rbg webp image from the given `Read`.
 pub fn webp_load_rgb<R: Read>(mut r: R) -> ImageResult<RgbImage> {
     let mut buf = Vec::new();
     r.read_to_end(&mut buf)?;
     webp_load_rgb_from_memory(&buf)
 }
 
+/// Convenience helper to load any webp image from the given memory buffer.
 pub fn webp_load_from_memory(buf: &[u8]) -> ImageResult<DynamicImage> {
     Ok(DynamicImage::ImageRgba8(webp_load_rgba_from_memory(buf)?))
 }
 
+/// Convenience helper to load an rgba webp image from the given memory buffer.
 pub fn webp_load_rgba_from_memory(buf: &[u8]) -> ImageResult<RgbaImage> {
     let (width, height, buf) = libwebp::WebPDecodeRGBA(buf)
         .map_err(|_| DecodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
@@ -187,6 +216,7 @@ pub fn webp_load_rgba_from_memory(buf: &[u8]) -> ImageResult<RgbaImage> {
     Ok(ImageBuffer::from_raw(width, height, buf.to_vec()).unwrap())
 }
 
+/// Convenience helper to load an rgb webp image from the given memory buffer.
 pub fn webp_load_rgb_from_memory(buf: &[u8]) -> ImageResult<RgbImage> {
     let (width, height, buf) = libwebp::WebPDecodeRGB(buf)
         .map_err(|_| DecodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
@@ -194,16 +224,26 @@ pub fn webp_load_rgb_from_memory(buf: &[u8]) -> ImageResult<RgbImage> {
     Ok(ImageBuffer::from_raw(width, height, buf.to_vec()).unwrap())
 }
 
+/// WebP encoder wrapper
+#[derive(Debug)]
 pub struct WebpEncoder<W: Write> {
     w: W,
     compression: Compression,
 }
+/// Compression settings for encoding.
+#[derive(Debug)]
 pub enum Compression {
     Lossless,
-    Lossy { quality_factor: f32 },
+    Lossy {
+        /// Quality factor for lossy compression; number between 0.0 and 1.0
+        quality_factor: f32,
+    },
 }
 
 impl<W: Write> WebpEncoder<W> {
+    /// Create a new encoder that writes its output to `w`.
+    /// The compression value is set to Lossy with a reasonable quality_factor
+    /// default of `0.75`.
     pub fn new(w: W) -> WebpEncoder<W> {
         Self {
             w,
@@ -212,15 +252,22 @@ impl<W: Write> WebpEncoder<W> {
             },
         }
     }
+    /// Same as `new`, but with the quality_factor set to the given value.
     pub fn new_with_quality(w: W, quality_factor: f32) -> WebpEncoder<W> {
         Self {
             w,
             compression: Compression::Lossy { quality_factor },
         }
     }
+    /// Same as `new`, but with the given compression settings.
     pub fn new_with_compression(w: W, compression: Compression) -> WebpEncoder<W> {
         Self { w, compression }
     }
+    /// Encodes the given image as webp and writes it to the encoder's Writer.
+    ///
+    /// Images with ColorType Rgb8, Rgba8, Bgr8 and Bgra8 are directly written
+    /// to it, while other color types are transparently converted to rgb or
+    /// rgba (which one depends on whether they have transparency) first.
     pub fn encode(self, img: &DynamicImage) -> ImageResult<()> {
         match img {
             DynamicImage::ImageRgb8(img) => self.encode_rgb(img),
@@ -236,6 +283,7 @@ impl<W: Write> WebpEncoder<W> {
         }
     }
 
+    /// Directly encode and write the given ImageBuffer to the encoder's Writer.
     pub fn encode_rgb<C>(self, img: &ImageBuffer<Rgb<u8>, C>) -> ImageResult<()>
     where
         C: Deref<Target = [u8]>,
@@ -253,6 +301,7 @@ impl<W: Write> WebpEncoder<W> {
         Ok(())
     }
 
+    /// Directly encode and write the given ImageBuffer to the encoder's Writer.
     pub fn encode_rgba<C>(self, img: &ImageBuffer<Rgba<u8>, C>) -> ImageResult<()>
     where
         C: Deref<Target = [u8]>,
@@ -270,6 +319,7 @@ impl<W: Write> WebpEncoder<W> {
         Ok(())
     }
 
+    /// Directly encode and write the given ImageBuffer to the encoder's Writer.
     pub fn encode_bgr<C>(self, img: &ImageBuffer<Bgr<u8>, C>) -> ImageResult<()>
     where
         C: Deref<Target = [u8]>,
@@ -287,6 +337,7 @@ impl<W: Write> WebpEncoder<W> {
         Ok(())
     }
 
+    /// Directly encode and write the given ImageBuffer to the encoder's Writer.
     pub fn encode_bgra<C>(self, img: &ImageBuffer<Bgra<u8>, C>) -> ImageResult<()>
     where
         C: Deref<Target = [u8]>,
@@ -305,6 +356,9 @@ impl<W: Write> WebpEncoder<W> {
     }
 }
 
+/// Note: This implementation will fail for color types other than Rgb8, Rgba8,
+/// Bgr8 and Bgra8. To use this implementation, convert the image to one of these
+/// color types first or call [`WebpEncoder::encode`] for convenience.
 impl<W: Write> ImageEncoder for WebpEncoder<W> {
     fn write_image(
         self,
