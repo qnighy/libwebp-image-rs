@@ -1,10 +1,12 @@
 use std::io::{self, Read, Write};
 use std::ops::Deref;
 
-use image::error::{DecodingError, EncodingError, ImageFormatHint};
 use image::{
-    Bgr, Bgra, ColorType, DynamicImage, ImageBuffer, ImageDecoder, ImageError, ImageResult, Rgb,
-    RgbImage, Rgba, RgbaImage,
+    error::{
+        DecodingError, EncodingError, ImageFormatHint, UnsupportedError, UnsupportedErrorKind,
+    },
+    Bgr, Bgra, ColorType, DynamicImage, ImageBuffer, ImageDecoder, ImageEncoder, ImageError,
+    ImageFormat, ImageResult, Rgb, RgbImage, Rgba, RgbaImage,
 };
 use libwebp::boxed::WebpBox;
 
@@ -300,5 +302,32 @@ impl<W: Write> WebpEncoder<W> {
         .map_err(ImageError::Encoding)?;
         w.write_all(&buf)?;
         Ok(())
+    }
+}
+
+impl<W: Write> ImageEncoder for WebpEncoder<W> {
+    fn write_image(
+        self,
+        buf: &[u8],
+        width: u32,
+        height: u32,
+        color_type: ColorType,
+    ) -> ImageResult<()> {
+        match color_type {
+            ColorType::Rgb8 => self.encode_rgb(&ImageBuffer::from_raw(width, height, buf).unwrap()),
+            ColorType::Rgba8 => {
+                self.encode_rgba(&ImageBuffer::from_raw(width, height, buf).unwrap())
+            }
+            ColorType::Bgr8 => self.encode_bgr(&ImageBuffer::from_raw(width, height, buf).unwrap()),
+            ColorType::Bgra8 => {
+                self.encode_bgra(&ImageBuffer::from_raw(width, height, buf).unwrap())
+            }
+            _ => Err(ImageError::Unsupported(
+                UnsupportedError::from_format_and_kind(
+                    ImageFormat::WebP.into(),
+                    UnsupportedErrorKind::Color(color_type.into()),
+                ),
+            )),
+        }
     }
 }
