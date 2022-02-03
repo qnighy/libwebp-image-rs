@@ -23,8 +23,8 @@ use image::{
     error::{
         DecodingError, EncodingError, ImageFormatHint, UnsupportedError, UnsupportedErrorKind,
     },
-    Bgr, Bgra, ColorType, DynamicImage, ImageBuffer, ImageDecoder, ImageEncoder, ImageError,
-    ImageFormat, ImageResult, Rgb, RgbImage, Rgba, RgbaImage,
+    ColorType, DynamicImage, ImageBuffer, ImageDecoder, ImageEncoder, ImageError, ImageFormat,
+    ImageResult, Rgb, RgbImage, Rgba, RgbaImage,
 };
 use libwebp::boxed::WebpBox;
 
@@ -116,7 +116,6 @@ struct Reader<R: Read> {
     buf: Vec<u8>,
     info: Option<(u32, u32)>,
     data: Option<(u32, u32, u32, WebpBox<[u8]>)>,
-    error: bool,
 }
 
 impl<R: Read> Reader<R> {
@@ -127,7 +126,6 @@ impl<R: Read> Reader<R> {
             buf: Vec::new(),
             info: None,
             data: None,
-            error: false,
         }
     }
 
@@ -272,14 +270,8 @@ impl<W: Write> WebpEncoder<W> {
         match img {
             DynamicImage::ImageRgb8(img) => self.encode_rgb(img),
             DynamicImage::ImageRgba8(img) => self.encode_rgba(img),
-            DynamicImage::ImageBgr8(img) => self.encode_bgr(img),
-            DynamicImage::ImageBgra8(img) => self.encode_bgra(img),
-            DynamicImage::ImageLuma8(_) => self.encode_rgb(&img.to_rgb8()),
-            DynamicImage::ImageLumaA8(_) => self.encode_rgba(&img.to_rgba8()),
-            DynamicImage::ImageRgb16(_) => self.encode_rgb(&img.to_rgb8()),
-            DynamicImage::ImageRgba16(_) => self.encode_rgba(&img.to_rgba8()),
-            DynamicImage::ImageLuma16(_) => self.encode_rgb(&img.to_rgb8()),
-            DynamicImage::ImageLumaA16(_) => self.encode_rgba(&img.to_rgba8()),
+            _ if img.color().has_alpha() => self.encode_rgba(&img.to_rgba8()),
+            _ => self.encode_rgb(&img.to_rgb8()),
         }
     }
 
@@ -291,9 +283,9 @@ impl<W: Write> WebpEncoder<W> {
         let WebpEncoder { mut w, compression } = self;
         let (width, height, stride) = (img.width(), img.height(), img.width() * 3);
         let buf = if let Compression::Lossy { quality_factor } = compression {
-            libwebp::WebPEncodeRGB(&img, width, height, stride, quality_factor)
+            libwebp::WebPEncodeRGB(img, width, height, stride, quality_factor)
         } else {
-            libwebp::WebPEncodeLosslessRGB(&img, width, height, stride)
+            libwebp::WebPEncodeLosslessRGB(img, width, height, stride)
         }
         .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
         .map_err(ImageError::Encoding)?;
@@ -309,45 +301,9 @@ impl<W: Write> WebpEncoder<W> {
         let WebpEncoder { mut w, compression } = self;
         let (width, height, stride) = (img.width(), img.height(), img.width() * 4);
         let buf = if let Compression::Lossy { quality_factor } = compression {
-            libwebp::WebPEncodeRGBA(&img, width, height, stride, quality_factor)
+            libwebp::WebPEncodeRGBA(img, width, height, stride, quality_factor)
         } else {
-            libwebp::WebPEncodeLosslessRGBA(&img, width, height, stride)
-        }
-        .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
-        .map_err(ImageError::Encoding)?;
-        w.write_all(&buf)?;
-        Ok(())
-    }
-
-    /// Directly encode and write the given ImageBuffer to the encoder's Writer.
-    pub fn encode_bgr<C>(self, img: &ImageBuffer<Bgr<u8>, C>) -> ImageResult<()>
-    where
-        C: Deref<Target = [u8]>,
-    {
-        let WebpEncoder { mut w, compression } = self;
-        let (width, height, stride) = (img.width(), img.height(), img.width() * 3);
-        let buf = if let Compression::Lossy { quality_factor } = compression {
-            libwebp::WebPEncodeBGR(&img, width, height, stride, quality_factor)
-        } else {
-            libwebp::WebPEncodeLosslessBGR(&img, width, height, stride)
-        }
-        .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
-        .map_err(ImageError::Encoding)?;
-        w.write_all(&buf)?;
-        Ok(())
-    }
-
-    /// Directly encode and write the given ImageBuffer to the encoder's Writer.
-    pub fn encode_bgra<C>(self, img: &ImageBuffer<Bgra<u8>, C>) -> ImageResult<()>
-    where
-        C: Deref<Target = [u8]>,
-    {
-        let WebpEncoder { mut w, compression } = self;
-        let (width, height, stride) = (img.width(), img.height(), img.width() * 4);
-        let buf = if let Compression::Lossy { quality_factor } = compression {
-            libwebp::WebPEncodeBGRA(&img, width, height, stride, quality_factor)
-        } else {
-            libwebp::WebPEncodeLosslessBGRA(&img, width, height, stride)
+            libwebp::WebPEncodeLosslessRGBA(img, width, height, stride)
         }
         .map_err(|_| EncodingError::new(ImageFormatHint::Unknown, "Webp Format Error".to_string()))
         .map_err(ImageError::Encoding)?;
@@ -371,10 +327,6 @@ impl<W: Write> ImageEncoder for WebpEncoder<W> {
             ColorType::Rgb8 => self.encode_rgb(&ImageBuffer::from_raw(width, height, buf).unwrap()),
             ColorType::Rgba8 => {
                 self.encode_rgba(&ImageBuffer::from_raw(width, height, buf).unwrap())
-            }
-            ColorType::Bgr8 => self.encode_bgr(&ImageBuffer::from_raw(width, height, buf).unwrap()),
-            ColorType::Bgra8 => {
-                self.encode_bgra(&ImageBuffer::from_raw(width, height, buf).unwrap())
             }
             _ => Err(ImageError::Unsupported(
                 UnsupportedError::from_format_and_kind(
