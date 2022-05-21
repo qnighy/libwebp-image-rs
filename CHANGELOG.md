@@ -1,4 +1,4 @@
-## Unreleased
+## 0.3.0
 
 - Breaking change
   - Update image from 0.23 to 0.24 https://github.com/qnighy/libwebp-image-rs/pull/10
