@@ -3,8 +3,8 @@ use std::ops::Deref;
 
 use image::error::{DecodingError, EncodingError, ImageFormatHint};
 use image::{
-    ColorType, DynamicImage, ImageBuffer, ImageDecoder, ImageError, ImageResult, Rgb,
-    RgbImage, Rgba, RgbaImage,
+    ColorType, DynamicImage, ImageBuffer, ImageDecoder, ImageError, ImageResult, Rgb, RgbImage,
+    Rgba, RgbaImage,
 };
 use libwebp::boxed::WebpBox;
 
