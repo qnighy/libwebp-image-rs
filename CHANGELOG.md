@@ -1,5 +1,8 @@
 ## Unreleased
 
+- Breaking change
+  - Update image from 0.23 to 0.24 https://github.com/qnighy/libwebp-image-rs/pull/10
+  - MSRV is now 1.56 (see the PR above)
 - Misc
   - Test build on Rust 1.34.0 & update docs https://github.com/qnighy/libwebp-image-rs/pull/8
 
