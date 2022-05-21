@@ -1,3 +1,7 @@
+// Copyright 2020-2022 Masaki Hara
+// Licensed under MIT or Apache-2.0.
+// See LICENSE and LICENSE-Apache-2.0 in the repository.
+
 use std::io::{self, Read, Write};
 use std::ops::Deref;
 
