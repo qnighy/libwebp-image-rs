@@ -8,7 +8,7 @@ jobs:
 
     strategy:
       matrix:
-        rust: [stable, 1.36.0, beta, nightly]
+        rust: [stable, 1.56.0, beta, nightly]
 
     steps:
     - uses: actions/checkout@v2
@@ -39,7 +39,7 @@ jobs:
 
     strategy:
       matrix:
-        rust: [1.34.0]
+        rust: [1.56.0]
 
     steps:
     - uses: actions/checkout@v2
